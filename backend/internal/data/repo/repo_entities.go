@@ -73,6 +73,7 @@ type (
 		NegateTags       bool    `json:"negateTags"`
 		OnlyWithoutPhoto bool    `json:"onlyWithoutPhoto"`
 		OnlyWithPhoto    bool    `json:"onlyWithPhoto"`
+		OnlyInStock      bool    `json:"onlyInStock"`
 		IncludeArchived  bool    `json:"includeArchived"`
 		FilterChildren   bool    `json:"filterChildren"` // when true, only return root entities (no parent)
 	}
@@ -94,13 +95,14 @@ type (
 	}
 
 	EntityCreate struct {
-		ImportRef    string    `json:"-"`
-		ParentID     uuid.UUID `json:"parentId"     extensions:"x-nullable"`
-		Name         string    `json:"name"         validate:"required,min=1,max=255"`
-		Quantity     float64   `json:"quantity"`
-		Description  string    `json:"description"  validate:"max=1000"`
-		AssetID      AssetID   `json:"-"`
-		EntityTypeID uuid.UUID `json:"entityTypeId"`
+		ImportRef         string    `json:"-"`
+		ParentID          uuid.UUID `json:"parentId"     extensions:"x-nullable"`
+		Name              string    `json:"name"         validate:"required,min=1,max=255"`
+		Quantity          float64   `json:"quantity"`
+		LowStockThreshold *float64  `json:"lowStockThreshold,omitempty" extensions:"x-nullable,x-omitempty"`
+		Description       string    `json:"description"  validate:"max=1000"`
+		AssetID           AssetID   `json:"-"`
+		EntityTypeID      uuid.UUID `json:"entityTypeId"`
 		// Only needed when ParentID is another item and this lives elsewhere (#1688).
 		LocationID uuid.UUID `json:"locationId" extensions:"x-nullable,x-omitempty"`
 
@@ -132,13 +134,14 @@ type (
 		// Extras
 		Notes string `json:"notes"`
 		// Edges
-		TagIDs        []uuid.UUID       `json:"tagIds"`
-		Fields        []EntityFieldData `json:"fields"`
-		AssetID       AssetID           `json:"assetId"       swaggertype:"string"`
-		Quantity      float64           `json:"quantity"`
-		PurchasePrice float64           `json:"purchasePrice" extensions:"x-nullable,x-omitempty"`
-		SoldPrice     float64           `json:"soldPrice"     extensions:"x-nullable,x-omitempty"`
-		ParentID      uuid.UUID         `json:"parentId"      extensions:"x-nullable,x-omitempty"`
+		TagIDs            []uuid.UUID       `json:"tagIds"`
+		Fields            []EntityFieldData `json:"fields"`
+		AssetID           AssetID           `json:"assetId"       swaggertype:"string"`
+		Quantity          float64           `json:"quantity"`
+		LowStockThreshold *float64          `json:"lowStockThreshold,omitempty" extensions:"x-nullable,x-omitempty"`
+		PurchasePrice     float64           `json:"purchasePrice" extensions:"x-nullable,x-omitempty"`
+		SoldPrice         float64           `json:"soldPrice"     extensions:"x-nullable,x-omitempty"`
+		ParentID          uuid.UUID         `json:"parentId"      extensions:"x-nullable,x-omitempty"`
 		// Only needed when ParentID is another item and this lives elsewhere (#1688).
 		// Otherwise ParentID carries the location. See resolveLocationOverride.
 		LocationID               uuid.UUID `json:"locationId"               extensions:"x-nullable,x-omitempty"`
@@ -152,13 +155,14 @@ type (
 	}
 
 	EntityPatch struct {
-		ID           uuid.UUID   `json:"id"`
-		Quantity     *float64    `json:"quantity,omitempty" extensions:"x-nullable,x-omitempty"`
-		ImportRef    *string     `json:"-"                  extensions:"x-nullable,x-omitempty"`
-		ParentID     uuid.UUID   `json:"parentId"           extensions:"x-nullable,x-omitempty"`
-		LocationID   uuid.UUID   `json:"locationId"         extensions:"x-nullable,x-omitempty"`
-		EntityTypeID uuid.UUID   `json:"entityTypeId"       extensions:"x-nullable,x-omitempty"`
-		TagIDs       []uuid.UUID `json:"tagIds"             extensions:"x-nullable,x-omitempty"`
+		ID                uuid.UUID   `json:"id"`
+		Quantity          *float64    `json:"quantity,omitempty" extensions:"x-nullable,x-omitempty"`
+		LowStockThreshold *float64    `json:"lowStockThreshold,omitempty" extensions:"x-nullable,x-omitempty"`
+		ImportRef         *string     `json:"-"                  extensions:"x-nullable,x-omitempty"`
+		ParentID          uuid.UUID   `json:"parentId"           extensions:"x-nullable,x-omitempty"`
+		LocationID        uuid.UUID   `json:"locationId"         extensions:"x-nullable,x-omitempty"`
+		EntityTypeID      uuid.UUID   `json:"entityTypeId"       extensions:"x-nullable,x-omitempty"`
+		TagIDs            []uuid.UUID `json:"tagIds"             extensions:"x-nullable,x-omitempty"`
 	}
 
 	EntitySummary struct {
@@ -172,6 +176,8 @@ type (
 		Archived    bool      `json:"archived"`
 		CreatedAt   time.Time `json:"createdAt"`
 		UpdatedAt   time.Time `json:"updatedAt"`
+
+		LowStockThreshold *float64 `json:"lowStockThreshold,omitempty" extensions:"x-nullable,x-omitempty"`
 
 		PurchasePrice float64 `json:"purchasePrice"`
 
@@ -272,16 +278,17 @@ func mapEntitySummary(e *ent.Entity) EntitySummary {
 	}
 
 	return EntitySummary{
-		ID:            e.ID,
-		AssetID:       AssetID(e.AssetID),
-		Name:          e.Name,
-		Description:   e.Description,
-		ImportRef:     e.ImportRef,
-		Quantity:      e.Quantity,
-		CreatedAt:     e.CreatedAt,
-		UpdatedAt:     e.UpdatedAt,
-		Archived:      e.Archived,
-		PurchasePrice: e.PurchasePrice,
+		ID:                e.ID,
+		AssetID:           AssetID(e.AssetID),
+		Name:              e.Name,
+		Description:       e.Description,
+		ImportRef:         e.ImportRef,
+		Quantity:          e.Quantity,
+		LowStockThreshold: e.LowStockThreshold,
+		CreatedAt:         e.CreatedAt,
+		UpdatedAt:         e.UpdatedAt,
+		Archived:          e.Archived,
+		PurchasePrice:     e.PurchasePrice,
 
 		// Edges
 		Parent:     parent,
@@ -607,6 +614,7 @@ func entityQuerySpanAttrs(gid uuid.UUID, q EntityQuery) []attribute.KeyValue {
 		attribute.Int("query.fields.count", len(q.Fields)),
 		attribute.Bool("query.only_with_photo", q.OnlyWithPhoto),
 		attribute.Bool("query.only_without_photo", q.OnlyWithoutPhoto),
+		attribute.Bool("query.only_in_stock", q.OnlyInStock),
 		attribute.Bool("query.include_archived", q.IncludeArchived),
 		attribute.Bool("query.filter_children", q.FilterChildren),
 		attribute.String("query.order_by", q.OrderBy),
@@ -1261,6 +1269,7 @@ func (r *EntityRepository) Create(ctx context.Context, gid uuid.UUID, data Entit
 		SetImportRef(data.ImportRef).
 		SetName(data.Name).
 		SetQuantity(data.Quantity).
+		SetNillableLowStockThreshold(data.LowStockThreshold).
 		SetDescription(data.Description).
 		SetModelNumber(data.ModelNumber).
 		SetManufacturer(data.Manufacturer).
@@ -1309,19 +1318,20 @@ func (r *EntityRepository) Create(ctx context.Context, gid uuid.UUID, data Entit
 
 // EntityCreateFromTemplate contains all data needed to create an entity from a template.
 type EntityCreateFromTemplate struct {
-	Name             string
-	Description      string
-	Manufacturer     string
-	ModelNumber      string
-	WarrantyDetails  string
-	TagIDs           []uuid.UUID
-	Fields           []EntityFieldData
-	Quantity         float64
-	ParentID         uuid.UUID
-	LocationID       uuid.UUID
-	EntityTypeID     uuid.UUID
-	Insured          bool
-	LifetimeWarranty bool
+	Name              string
+	Description       string
+	Manufacturer      string
+	ModelNumber       string
+	WarrantyDetails   string
+	TagIDs            []uuid.UUID
+	Fields            []EntityFieldData
+	Quantity          float64
+	LowStockThreshold *float64
+	ParentID          uuid.UUID
+	LocationID        uuid.UUID
+	EntityTypeID      uuid.UUID
+	Insured           bool
+	LifetimeWarranty  bool
 }
 
 // CreateFromTemplate creates an entity with all template data in a single transaction.
@@ -1409,6 +1419,7 @@ func (r *EntityRepository) CreateFromTemplate(ctx context.Context, gid uuid.UUID
 		SetName(data.Name).
 		SetDescription(data.Description).
 		SetQuantity(data.Quantity).
+		SetNillableLowStockThreshold(data.LowStockThreshold).
 		SetGroupID(gid).
 		SetAssetID(int64(nextAssetID)).
 		SetInsured(data.Insured).
@@ -1810,7 +1821,11 @@ func (r *EntityRepository) UpdateByGroup(ctx context.Context, gid uuid.UUID, dat
 	} else {
 		q.SetWarrantyExpires(t)
 	}
-
+	if data.LowStockThreshold != nil {
+		q.SetLowStockThreshold(*data.LowStockThreshold)
+	} else {
+		q.ClearLowStockThreshold()
+	}
 	if data.EntityTypeID != uuid.Nil {
 		q.SetEntityTypeID(data.EntityTypeID)
 	}
