@@ -19,6 +19,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/group"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/maintenanceentry"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/predicate"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/stockmovement"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/tag"
 )
 
@@ -617,6 +618,21 @@ func (_u *EntityUpdate) AddMaintenanceEntries(v ...*MaintenanceEntry) *EntityUpd
 	return _u.AddMaintenanceEntryIDs(ids...)
 }
 
+// AddStockMovementIDs adds the "stock_movements" edge to the StockMovement entity by IDs.
+func (_u *EntityUpdate) AddStockMovementIDs(ids ...uuid.UUID) *EntityUpdate {
+	_u.mutation.AddStockMovementIDs(ids...)
+	return _u
+}
+
+// AddStockMovements adds the "stock_movements" edges to the StockMovement entity.
+func (_u *EntityUpdate) AddStockMovements(v ...*StockMovement) *EntityUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddStockMovementIDs(ids...)
+}
+
 // AddAttachmentIDs adds the "attachments" edge to the Attachment entity by IDs.
 func (_u *EntityUpdate) AddAttachmentIDs(ids ...uuid.UUID) *EntityUpdate {
 	_u.mutation.AddAttachmentIDs(ids...)
@@ -764,6 +780,27 @@ func (_u *EntityUpdate) RemoveMaintenanceEntries(v ...*MaintenanceEntry) *Entity
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMaintenanceEntryIDs(ids...)
+}
+
+// ClearStockMovements clears all "stock_movements" edges to the StockMovement entity.
+func (_u *EntityUpdate) ClearStockMovements() *EntityUpdate {
+	_u.mutation.ClearStockMovements()
+	return _u
+}
+
+// RemoveStockMovementIDs removes the "stock_movements" edge to StockMovement entities by IDs.
+func (_u *EntityUpdate) RemoveStockMovementIDs(ids ...uuid.UUID) *EntityUpdate {
+	_u.mutation.RemoveStockMovementIDs(ids...)
+	return _u
+}
+
+// RemoveStockMovements removes "stock_movements" edges to StockMovement entities.
+func (_u *EntityUpdate) RemoveStockMovements(v ...*StockMovement) *EntityUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveStockMovementIDs(ids...)
 }
 
 // ClearAttachments clears all "attachments" edges to the Attachment entity.
@@ -1354,6 +1391,51 @@ func (_u *EntityUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(maintenanceentry.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.StockMovementsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.StockMovementsTable,
+			Columns: []string{entity.StockMovementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(stockmovement.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedStockMovementsIDs(); len(nodes) > 0 && !_u.mutation.StockMovementsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.StockMovementsTable,
+			Columns: []string{entity.StockMovementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(stockmovement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StockMovementsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.StockMovementsTable,
+			Columns: []string{entity.StockMovementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(stockmovement.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -2008,6 +2090,21 @@ func (_u *EntityUpdateOne) AddMaintenanceEntries(v ...*MaintenanceEntry) *Entity
 	return _u.AddMaintenanceEntryIDs(ids...)
 }
 
+// AddStockMovementIDs adds the "stock_movements" edge to the StockMovement entity by IDs.
+func (_u *EntityUpdateOne) AddStockMovementIDs(ids ...uuid.UUID) *EntityUpdateOne {
+	_u.mutation.AddStockMovementIDs(ids...)
+	return _u
+}
+
+// AddStockMovements adds the "stock_movements" edges to the StockMovement entity.
+func (_u *EntityUpdateOne) AddStockMovements(v ...*StockMovement) *EntityUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddStockMovementIDs(ids...)
+}
+
 // AddAttachmentIDs adds the "attachments" edge to the Attachment entity by IDs.
 func (_u *EntityUpdateOne) AddAttachmentIDs(ids ...uuid.UUID) *EntityUpdateOne {
 	_u.mutation.AddAttachmentIDs(ids...)
@@ -2155,6 +2252,27 @@ func (_u *EntityUpdateOne) RemoveMaintenanceEntries(v ...*MaintenanceEntry) *Ent
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMaintenanceEntryIDs(ids...)
+}
+
+// ClearStockMovements clears all "stock_movements" edges to the StockMovement entity.
+func (_u *EntityUpdateOne) ClearStockMovements() *EntityUpdateOne {
+	_u.mutation.ClearStockMovements()
+	return _u
+}
+
+// RemoveStockMovementIDs removes the "stock_movements" edge to StockMovement entities by IDs.
+func (_u *EntityUpdateOne) RemoveStockMovementIDs(ids ...uuid.UUID) *EntityUpdateOne {
+	_u.mutation.RemoveStockMovementIDs(ids...)
+	return _u
+}
+
+// RemoveStockMovements removes "stock_movements" edges to StockMovement entities.
+func (_u *EntityUpdateOne) RemoveStockMovements(v ...*StockMovement) *EntityUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveStockMovementIDs(ids...)
 }
 
 // ClearAttachments clears all "attachments" edges to the Attachment entity.
@@ -2775,6 +2893,51 @@ func (_u *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(maintenanceentry.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.StockMovementsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.StockMovementsTable,
+			Columns: []string{entity.StockMovementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(stockmovement.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedStockMovementsIDs(); len(nodes) > 0 && !_u.mutation.StockMovementsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.StockMovementsTable,
+			Columns: []string{entity.StockMovementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(stockmovement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StockMovementsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.StockMovementsTable,
+			Columns: []string{entity.StockMovementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(stockmovement.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

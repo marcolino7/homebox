@@ -48,6 +48,9 @@ type Notifier func(*sql.Selector)
 // PasswordResetTokens is the predicate function for passwordresettokens builders.
 type PasswordResetTokens func(*sql.Selector)
 
+// StockMovement is the predicate function for stockmovement builders.
+type StockMovement func(*sql.Selector)
+
 // Tag is the predicate function for tag builders.
 type Tag func(*sql.Selector)
 

@@ -21,6 +21,7 @@ type AllRepos struct {
 	Tags                *TagRepository
 	Attachments         *AttachmentRepo
 	MaintEntry          *MaintenanceEntryRepository
+	StockMovements      *StockMovementRepository
 	Notifiers           *NotifierRepository
 	Exports             *ExportRepository
 }
@@ -44,6 +45,7 @@ func New(db *ent.Client, bus *eventbus.EventBus, storage config.Storage, pubSubC
 		Tags:                &TagRepository{db, bus},
 		Attachments:         attachments,
 		MaintEntry:          &MaintenanceEntryRepository{db},
+		StockMovements:      &StockMovementRepository{db},
 		Notifiers:           NewNotifierRepository(db),
 		Exports:             &ExportRepository{db},
 	}

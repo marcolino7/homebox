@@ -17,6 +17,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/group"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/maintenanceentry"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/stockmovement"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/tag"
 )
 
@@ -518,6 +519,21 @@ func (_c *EntityCreate) AddMaintenanceEntries(v ...*MaintenanceEntry) *EntityCre
 	return _c.AddMaintenanceEntryIDs(ids...)
 }
 
+// AddStockMovementIDs adds the "stock_movements" edge to the StockMovement entity by IDs.
+func (_c *EntityCreate) AddStockMovementIDs(ids ...uuid.UUID) *EntityCreate {
+	_c.mutation.AddStockMovementIDs(ids...)
+	return _c
+}
+
+// AddStockMovements adds the "stock_movements" edges to the StockMovement entity.
+func (_c *EntityCreate) AddStockMovements(v ...*StockMovement) *EntityCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddStockMovementIDs(ids...)
+}
+
 // AddAttachmentIDs adds the "attachments" edge to the Attachment entity by IDs.
 func (_c *EntityCreate) AddAttachmentIDs(ids ...uuid.UUID) *EntityCreate {
 	_c.mutation.AddAttachmentIDs(ids...)
@@ -976,6 +992,22 @@ func (_c *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(maintenanceentry.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.StockMovementsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.StockMovementsTable,
+			Columns: []string{entity.StockMovementsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(stockmovement.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

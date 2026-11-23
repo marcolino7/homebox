@@ -327,9 +327,17 @@ func (ctrl *V1Controller) HandleEntityUpdate() errchain.HandlerFunc {
 		span.SetAttributes(attribute.String("group.id", auth.GID.String()))
 
 		body.ID = ID
+		before, qerr := ctrl.repo.StockMovements.Quantity(auth, auth.GID, ID)
 		out, err := ctrl.repo.Entities.UpdateByGroup(auth, auth.GID, body)
 		if err != nil {
 			recordCtrlSpanError(span, err)
+			return out, err
+		}
+		if qerr == nil {
+			// Keep the quantity ledger in step with edits made through the edit form.
+			if rerr := ctrl.repo.StockMovements.RecordChange(auth, ID, before, out.Quantity, repo.StockMovementAdjustment, userDisplayName(auth), ""); rerr != nil {
+				recordCtrlSpanError(span, rerr)
+			}
 		}
 		return out, err
 	}
@@ -363,6 +371,7 @@ func (ctrl *V1Controller) HandleEntityPatch() errchain.HandlerFunc {
 		span.SetAttributes(attribute.String("group.id", auth.GID.String()))
 
 		body.ID = ID
+		before, qerr := ctrl.repo.StockMovements.Quantity(auth, auth.GID, ID)
 		err := ctrl.repo.Entities.Patch(auth, auth.GID, ID, body)
 		if err != nil {
 			recordCtrlSpanError(span, err)
@@ -372,6 +381,17 @@ func (ctrl *V1Controller) HandleEntityPatch() errchain.HandlerFunc {
 		out, err := ctrl.repo.Entities.GetOneByGroup(auth, auth.GID, ID)
 		if err != nil {
 			recordCtrlSpanError(span, err)
+			return out, err
+		}
+		if qerr == nil && body.Quantity != nil {
+			// The +/- buttons use PATCH: record the change as stock in or out.
+			kind := repo.StockMovementIn
+			if out.Quantity < before {
+				kind = repo.StockMovementOut
+			}
+			if rerr := ctrl.repo.StockMovements.RecordChange(auth, ID, before, out.Quantity, kind, userDisplayName(auth), ""); rerr != nil {
+				recordCtrlSpanError(span, rerr)
+			}
 		}
 		return out, err
 	}

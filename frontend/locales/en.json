@@ -749,6 +749,30 @@
         },
         "update_location": "Update Location"
     },
+    "stock_movements": {
+        "add": "Add movement",
+        "current_quantity": "Current quantity",
+        "empty": "No movements recorded for this item yet.",
+        "field": {
+            "comment": "Comment",
+            "new_quantity": "New quantity",
+            "quantity": "Quantity",
+            "type": "Type"
+        },
+        "new": "New movement",
+        "title": "Movements",
+        "toast": {
+            "created": "Movement recorded",
+            "failed_create": "Failed to record the movement",
+            "failed_load": "Failed to load the movements"
+        },
+        "type": {
+            "adjustment": "Adjustment",
+            "in": "Stock in",
+            "initial": "Initial quantity",
+            "out": "Stock out"
+        }
+    },
     "maintenance": {
         "filter": {
             "both": "Both",

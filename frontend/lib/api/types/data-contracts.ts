@@ -1487,3 +1487,27 @@ export interface ValidateErrorResponse {
   error: string;
   fields: string;
 }
+
+export interface StockMovement {
+  comment: string;
+  createdAt: Date | string;
+  id: string;
+  occurredAt: Date | string;
+  performedBy: string;
+  quantity: number;
+  quantityAfter?: number | null;
+  /** in, out, adjustment or initial */
+  type: string;
+}
+
+export interface StockMovementCreate {
+  /** With false the quantity is not changed and the entry is stored as is (history import) */
+  applyToQuantity?: boolean | null;
+  comment?: string;
+  occurredAt?: Date | string | null;
+  performedBy?: string;
+  quantity: number;
+  quantityAfter?: number | null;
+  /** in, out, adjustment or initial */
+  type: "in" | "out" | "adjustment" | "initial";
+}

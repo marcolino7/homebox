@@ -83,6 +83,8 @@ const (
 	EdgeFields = "fields"
 	// EdgeMaintenanceEntries holds the string denoting the maintenance_entries edge name in mutations.
 	EdgeMaintenanceEntries = "maintenance_entries"
+	// EdgeStockMovements holds the string denoting the stock_movements edge name in mutations.
+	EdgeStockMovements = "stock_movements"
 	// EdgeAttachments holds the string denoting the attachments edge name in mutations.
 	EdgeAttachments = "attachments"
 	// Table holds the table name of the entity in the database.
@@ -136,6 +138,13 @@ const (
 	MaintenanceEntriesInverseTable = "maintenance_entries"
 	// MaintenanceEntriesColumn is the table column denoting the maintenance_entries relation/edge.
 	MaintenanceEntriesColumn = "entity_id"
+	// StockMovementsTable is the table that holds the stock_movements relation/edge.
+	StockMovementsTable = "stock_movements"
+	// StockMovementsInverseTable is the table name for the StockMovement entity.
+	// It exists in this package in order to avoid circular dependency with the "stockmovement" package.
+	StockMovementsInverseTable = "stock_movements"
+	// StockMovementsColumn is the table column denoting the stock_movements relation/edge.
+	StockMovementsColumn = "entity_id"
 	// AttachmentsTable is the table that holds the attachments relation/edge.
 	AttachmentsTable = "attachments"
 	// AttachmentsInverseTable is the table name for the Attachment entity.
@@ -481,6 +490,20 @@ func ByMaintenanceEntries(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOptio
 	}
 }
 
+// ByStockMovementsCount orders the results by stock_movements count.
+func ByStockMovementsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStockMovementsStep(), opts...)
+	}
+}
+
+// ByStockMovements orders the results by stock_movements terms.
+func ByStockMovements(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStockMovementsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAttachmentsCount orders the results by attachments count.
 func ByAttachmentsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -555,6 +578,13 @@ func newMaintenanceEntriesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MaintenanceEntriesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MaintenanceEntriesTable, MaintenanceEntriesColumn),
+	)
+}
+func newStockMovementsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StockMovementsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StockMovementsTable, StockMovementsColumn),
 	)
 }
 func newAttachmentsStep() *sqlgraph.Step {

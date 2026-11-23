@@ -673,6 +673,30 @@
         },
         "update_location": "Aggiorna ubicazione"
     },
+    "stock_movements": {
+        "add": "Aggiungi movimento",
+        "current_quantity": "Quantità attuale",
+        "empty": "Nessun movimento registrato per questo oggetto.",
+        "field": {
+            "comment": "Commento",
+            "new_quantity": "Nuova quantità",
+            "quantity": "Quantità",
+            "type": "Tipo"
+        },
+        "new": "Nuovo movimento",
+        "title": "Movimenti",
+        "toast": {
+            "created": "Movimento registrato",
+            "failed_create": "Impossibile registrare il movimento",
+            "failed_load": "Impossibile caricare i movimenti"
+        },
+        "type": {
+            "adjustment": "Rettifica",
+            "in": "Carico",
+            "initial": "Quantità iniziale",
+            "out": "Scarico"
+        }
+    },
     "maintenance": {
         "filter": {
             "both": "Entrambi",

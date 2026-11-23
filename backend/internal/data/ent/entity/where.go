@@ -1683,6 +1683,29 @@ func HasMaintenanceEntriesWith(preds ...predicate.MaintenanceEntry) predicate.En
 	})
 }
 
+// HasStockMovements applies the HasEdge predicate on the "stock_movements" edge.
+func HasStockMovements() predicate.Entity {
+	return predicate.Entity(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StockMovementsTable, StockMovementsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStockMovementsWith applies the HasEdge predicate on the "stock_movements" edge with a given conditions (other predicates).
+func HasStockMovementsWith(preds ...predicate.StockMovement) predicate.Entity {
+	return predicate.Entity(func(s *sql.Selector) {
+		step := newStockMovementsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasAttachments applies the HasEdge predicate on the "attachments" edge.
 func HasAttachments() predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {

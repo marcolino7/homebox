@@ -27,6 +27,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/notifier"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/passwordresettokens"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/predicate"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/stockmovement"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/tag"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/templatefield"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/user"
@@ -56,6 +57,7 @@ const (
 	TypeMaintenanceEntry     = "MaintenanceEntry"
 	TypeNotifier             = "Notifier"
 	TypePasswordResetTokens  = "PasswordResetTokens"
+	TypeStockMovement        = "StockMovement"
 	TypeTag                  = "Tag"
 	TypeTemplateField        = "TemplateField"
 	TypeUser                 = "User"
@@ -2668,6 +2670,9 @@ type EntityMutation struct {
 	maintenance_entries         map[uuid.UUID]struct{}
 	removedmaintenance_entries  map[uuid.UUID]struct{}
 	clearedmaintenance_entries  bool
+	stock_movements             map[uuid.UUID]struct{}
+	removedstock_movements      map[uuid.UUID]struct{}
+	clearedstock_movements      bool
 	attachments                 map[uuid.UUID]struct{}
 	removedattachments          map[uuid.UUID]struct{}
 	clearedattachments          bool
@@ -4389,6 +4394,60 @@ func (m *EntityMutation) ResetMaintenanceEntries() {
 	m.removedmaintenance_entries = nil
 }
 
+// AddStockMovementIDs adds the "stock_movements" edge to the StockMovement entity by ids.
+func (m *EntityMutation) AddStockMovementIDs(ids ...uuid.UUID) {
+	if m.stock_movements == nil {
+		m.stock_movements = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.stock_movements[ids[i]] = struct{}{}
+	}
+}
+
+// ClearStockMovements clears the "stock_movements" edge to the StockMovement entity.
+func (m *EntityMutation) ClearStockMovements() {
+	m.clearedstock_movements = true
+}
+
+// StockMovementsCleared reports if the "stock_movements" edge to the StockMovement entity was cleared.
+func (m *EntityMutation) StockMovementsCleared() bool {
+	return m.clearedstock_movements
+}
+
+// RemoveStockMovementIDs removes the "stock_movements" edge to the StockMovement entity by IDs.
+func (m *EntityMutation) RemoveStockMovementIDs(ids ...uuid.UUID) {
+	if m.removedstock_movements == nil {
+		m.removedstock_movements = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.stock_movements, ids[i])
+		m.removedstock_movements[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedStockMovements returns the removed IDs of the "stock_movements" edge to the StockMovement entity.
+func (m *EntityMutation) RemovedStockMovementsIDs() (ids []uuid.UUID) {
+	for id := range m.removedstock_movements {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// StockMovementsIDs returns the "stock_movements" edge IDs in the mutation.
+func (m *EntityMutation) StockMovementsIDs() (ids []uuid.UUID) {
+	for id := range m.stock_movements {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetStockMovements resets all changes to the "stock_movements" edge.
+func (m *EntityMutation) ResetStockMovements() {
+	m.stock_movements = nil
+	m.clearedstock_movements = false
+	m.removedstock_movements = nil
+}
+
 // AddAttachmentIDs adds the "attachments" edge to the Attachment entity by ids.
 func (m *EntityMutation) AddAttachmentIDs(ids ...uuid.UUID) {
 	if m.attachments == nil {
@@ -5134,7 +5193,7 @@ func (m *EntityMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *EntityMutation) AddedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 11)
 	if m.group != nil {
 		edges = append(edges, entity.EdgeGroup)
 	}
@@ -5161,6 +5220,9 @@ func (m *EntityMutation) AddedEdges() []string {
 	}
 	if m.maintenance_entries != nil {
 		edges = append(edges, entity.EdgeMaintenanceEntries)
+	}
+	if m.stock_movements != nil {
+		edges = append(edges, entity.EdgeStockMovements)
 	}
 	if m.attachments != nil {
 		edges = append(edges, entity.EdgeAttachments)
@@ -5218,6 +5280,12 @@ func (m *EntityMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case entity.EdgeStockMovements:
+		ids := make([]ent.Value, 0, len(m.stock_movements))
+		for id := range m.stock_movements {
+			ids = append(ids, id)
+		}
+		return ids
 	case entity.EdgeAttachments:
 		ids := make([]ent.Value, 0, len(m.attachments))
 		for id := range m.attachments {
@@ -5230,7 +5298,7 @@ func (m *EntityMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *EntityMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 11)
 	if m.removedchildren != nil {
 		edges = append(edges, entity.EdgeChildren)
 	}
@@ -5245,6 +5313,9 @@ func (m *EntityMutation) RemovedEdges() []string {
 	}
 	if m.removedmaintenance_entries != nil {
 		edges = append(edges, entity.EdgeMaintenanceEntries)
+	}
+	if m.removedstock_movements != nil {
+		edges = append(edges, entity.EdgeStockMovements)
 	}
 	if m.removedattachments != nil {
 		edges = append(edges, entity.EdgeAttachments)
@@ -5286,6 +5357,12 @@ func (m *EntityMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case entity.EdgeStockMovements:
+		ids := make([]ent.Value, 0, len(m.removedstock_movements))
+		for id := range m.removedstock_movements {
+			ids = append(ids, id)
+		}
+		return ids
 	case entity.EdgeAttachments:
 		ids := make([]ent.Value, 0, len(m.removedattachments))
 		for id := range m.removedattachments {
@@ -5298,7 +5375,7 @@ func (m *EntityMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *EntityMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 11)
 	if m.clearedgroup {
 		edges = append(edges, entity.EdgeGroup)
 	}
@@ -5325,6 +5402,9 @@ func (m *EntityMutation) ClearedEdges() []string {
 	}
 	if m.clearedmaintenance_entries {
 		edges = append(edges, entity.EdgeMaintenanceEntries)
+	}
+	if m.clearedstock_movements {
+		edges = append(edges, entity.EdgeStockMovements)
 	}
 	if m.clearedattachments {
 		edges = append(edges, entity.EdgeAttachments)
@@ -5354,6 +5434,8 @@ func (m *EntityMutation) EdgeCleared(name string) bool {
 		return m.clearedfields
 	case entity.EdgeMaintenanceEntries:
 		return m.clearedmaintenance_entries
+	case entity.EdgeStockMovements:
+		return m.clearedstock_movements
 	case entity.EdgeAttachments:
 		return m.clearedattachments
 	}
@@ -5410,6 +5492,9 @@ func (m *EntityMutation) ResetEdge(name string) error {
 		return nil
 	case entity.EdgeMaintenanceEntries:
 		m.ResetMaintenanceEntries()
+		return nil
+	case entity.EdgeStockMovements:
+		m.ResetStockMovements()
 		return nil
 	case entity.EdgeAttachments:
 		m.ResetAttachments()
@@ -13961,6 +14046,954 @@ func (m *PasswordResetTokensMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown PasswordResetTokens edge %s", name)
+}
+
+// StockMovementMutation represents an operation that mutates the StockMovement nodes in the graph.
+type StockMovementMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	created_at        *time.Time
+	updated_at        *time.Time
+	movement_type     *string
+	quantity          *float64
+	addquantity       *float64
+	quantity_after    *float64
+	addquantity_after *float64
+	occurred_at       *time.Time
+	comment           *string
+	performed_by      *string
+	clearedFields     map[string]struct{}
+	entity            *uuid.UUID
+	clearedentity     bool
+	done              bool
+	oldValue          func(context.Context) (*StockMovement, error)
+	predicates        []predicate.StockMovement
+}
+
+var _ ent.Mutation = (*StockMovementMutation)(nil)
+
+// stockmovementOption allows management of the mutation configuration using functional options.
+type stockmovementOption func(*StockMovementMutation)
+
+// newStockMovementMutation creates new mutation for the StockMovement entity.
+func newStockMovementMutation(c config, op Op, opts ...stockmovementOption) *StockMovementMutation {
+	m := &StockMovementMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeStockMovement,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withStockMovementID sets the ID field of the mutation.
+func withStockMovementID(id uuid.UUID) stockmovementOption {
+	return func(m *StockMovementMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *StockMovement
+		)
+		m.oldValue = func(ctx context.Context) (*StockMovement, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().StockMovement.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withStockMovement sets the old StockMovement of the mutation.
+func withStockMovement(node *StockMovement) stockmovementOption {
+	return func(m *StockMovementMutation) {
+		m.oldValue = func(context.Context) (*StockMovement, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m StockMovementMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m StockMovementMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of StockMovement entities.
+func (m *StockMovementMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *StockMovementMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *StockMovementMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().StockMovement.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *StockMovementMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *StockMovementMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *StockMovementMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *StockMovementMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *StockMovementMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *StockMovementMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetEntityID sets the "entity_id" field.
+func (m *StockMovementMutation) SetEntityID(u uuid.UUID) {
+	m.entity = &u
+}
+
+// EntityID returns the value of the "entity_id" field in the mutation.
+func (m *StockMovementMutation) EntityID() (r uuid.UUID, exists bool) {
+	v := m.entity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEntityID returns the old "entity_id" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldEntityID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEntityID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEntityID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEntityID: %w", err)
+	}
+	return oldValue.EntityID, nil
+}
+
+// ResetEntityID resets all changes to the "entity_id" field.
+func (m *StockMovementMutation) ResetEntityID() {
+	m.entity = nil
+}
+
+// SetMovementType sets the "movement_type" field.
+func (m *StockMovementMutation) SetMovementType(s string) {
+	m.movement_type = &s
+}
+
+// MovementType returns the value of the "movement_type" field in the mutation.
+func (m *StockMovementMutation) MovementType() (r string, exists bool) {
+	v := m.movement_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMovementType returns the old "movement_type" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldMovementType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMovementType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMovementType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMovementType: %w", err)
+	}
+	return oldValue.MovementType, nil
+}
+
+// ResetMovementType resets all changes to the "movement_type" field.
+func (m *StockMovementMutation) ResetMovementType() {
+	m.movement_type = nil
+}
+
+// SetQuantity sets the "quantity" field.
+func (m *StockMovementMutation) SetQuantity(f float64) {
+	m.quantity = &f
+	m.addquantity = nil
+}
+
+// Quantity returns the value of the "quantity" field in the mutation.
+func (m *StockMovementMutation) Quantity() (r float64, exists bool) {
+	v := m.quantity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuantity returns the old "quantity" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldQuantity(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuantity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuantity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuantity: %w", err)
+	}
+	return oldValue.Quantity, nil
+}
+
+// AddQuantity adds f to the "quantity" field.
+func (m *StockMovementMutation) AddQuantity(f float64) {
+	if m.addquantity != nil {
+		*m.addquantity += f
+	} else {
+		m.addquantity = &f
+	}
+}
+
+// AddedQuantity returns the value that was added to the "quantity" field in this mutation.
+func (m *StockMovementMutation) AddedQuantity() (r float64, exists bool) {
+	v := m.addquantity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetQuantity resets all changes to the "quantity" field.
+func (m *StockMovementMutation) ResetQuantity() {
+	m.quantity = nil
+	m.addquantity = nil
+}
+
+// SetQuantityAfter sets the "quantity_after" field.
+func (m *StockMovementMutation) SetQuantityAfter(f float64) {
+	m.quantity_after = &f
+	m.addquantity_after = nil
+}
+
+// QuantityAfter returns the value of the "quantity_after" field in the mutation.
+func (m *StockMovementMutation) QuantityAfter() (r float64, exists bool) {
+	v := m.quantity_after
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuantityAfter returns the old "quantity_after" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldQuantityAfter(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuantityAfter is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuantityAfter requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuantityAfter: %w", err)
+	}
+	return oldValue.QuantityAfter, nil
+}
+
+// AddQuantityAfter adds f to the "quantity_after" field.
+func (m *StockMovementMutation) AddQuantityAfter(f float64) {
+	if m.addquantity_after != nil {
+		*m.addquantity_after += f
+	} else {
+		m.addquantity_after = &f
+	}
+}
+
+// AddedQuantityAfter returns the value that was added to the "quantity_after" field in this mutation.
+func (m *StockMovementMutation) AddedQuantityAfter() (r float64, exists bool) {
+	v := m.addquantity_after
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearQuantityAfter clears the value of the "quantity_after" field.
+func (m *StockMovementMutation) ClearQuantityAfter() {
+	m.quantity_after = nil
+	m.addquantity_after = nil
+	m.clearedFields[stockmovement.FieldQuantityAfter] = struct{}{}
+}
+
+// QuantityAfterCleared returns if the "quantity_after" field was cleared in this mutation.
+func (m *StockMovementMutation) QuantityAfterCleared() bool {
+	_, ok := m.clearedFields[stockmovement.FieldQuantityAfter]
+	return ok
+}
+
+// ResetQuantityAfter resets all changes to the "quantity_after" field.
+func (m *StockMovementMutation) ResetQuantityAfter() {
+	m.quantity_after = nil
+	m.addquantity_after = nil
+	delete(m.clearedFields, stockmovement.FieldQuantityAfter)
+}
+
+// SetOccurredAt sets the "occurred_at" field.
+func (m *StockMovementMutation) SetOccurredAt(t time.Time) {
+	m.occurred_at = &t
+}
+
+// OccurredAt returns the value of the "occurred_at" field in the mutation.
+func (m *StockMovementMutation) OccurredAt() (r time.Time, exists bool) {
+	v := m.occurred_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOccurredAt returns the old "occurred_at" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldOccurredAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOccurredAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOccurredAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOccurredAt: %w", err)
+	}
+	return oldValue.OccurredAt, nil
+}
+
+// ResetOccurredAt resets all changes to the "occurred_at" field.
+func (m *StockMovementMutation) ResetOccurredAt() {
+	m.occurred_at = nil
+}
+
+// SetComment sets the "comment" field.
+func (m *StockMovementMutation) SetComment(s string) {
+	m.comment = &s
+}
+
+// Comment returns the value of the "comment" field in the mutation.
+func (m *StockMovementMutation) Comment() (r string, exists bool) {
+	v := m.comment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldComment returns the old "comment" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldComment(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldComment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldComment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldComment: %w", err)
+	}
+	return oldValue.Comment, nil
+}
+
+// ClearComment clears the value of the "comment" field.
+func (m *StockMovementMutation) ClearComment() {
+	m.comment = nil
+	m.clearedFields[stockmovement.FieldComment] = struct{}{}
+}
+
+// CommentCleared returns if the "comment" field was cleared in this mutation.
+func (m *StockMovementMutation) CommentCleared() bool {
+	_, ok := m.clearedFields[stockmovement.FieldComment]
+	return ok
+}
+
+// ResetComment resets all changes to the "comment" field.
+func (m *StockMovementMutation) ResetComment() {
+	m.comment = nil
+	delete(m.clearedFields, stockmovement.FieldComment)
+}
+
+// SetPerformedBy sets the "performed_by" field.
+func (m *StockMovementMutation) SetPerformedBy(s string) {
+	m.performed_by = &s
+}
+
+// PerformedBy returns the value of the "performed_by" field in the mutation.
+func (m *StockMovementMutation) PerformedBy() (r string, exists bool) {
+	v := m.performed_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPerformedBy returns the old "performed_by" field's value of the StockMovement entity.
+// If the StockMovement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StockMovementMutation) OldPerformedBy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPerformedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPerformedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPerformedBy: %w", err)
+	}
+	return oldValue.PerformedBy, nil
+}
+
+// ClearPerformedBy clears the value of the "performed_by" field.
+func (m *StockMovementMutation) ClearPerformedBy() {
+	m.performed_by = nil
+	m.clearedFields[stockmovement.FieldPerformedBy] = struct{}{}
+}
+
+// PerformedByCleared returns if the "performed_by" field was cleared in this mutation.
+func (m *StockMovementMutation) PerformedByCleared() bool {
+	_, ok := m.clearedFields[stockmovement.FieldPerformedBy]
+	return ok
+}
+
+// ResetPerformedBy resets all changes to the "performed_by" field.
+func (m *StockMovementMutation) ResetPerformedBy() {
+	m.performed_by = nil
+	delete(m.clearedFields, stockmovement.FieldPerformedBy)
+}
+
+// ClearEntity clears the "entity" edge to the Entity entity.
+func (m *StockMovementMutation) ClearEntity() {
+	m.clearedentity = true
+	m.clearedFields[stockmovement.FieldEntityID] = struct{}{}
+}
+
+// EntityCleared reports if the "entity" edge to the Entity entity was cleared.
+func (m *StockMovementMutation) EntityCleared() bool {
+	return m.clearedentity
+}
+
+// EntityIDs returns the "entity" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EntityID instead. It exists only for internal usage by the builders.
+func (m *StockMovementMutation) EntityIDs() (ids []uuid.UUID) {
+	if id := m.entity; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEntity resets all changes to the "entity" edge.
+func (m *StockMovementMutation) ResetEntity() {
+	m.entity = nil
+	m.clearedentity = false
+}
+
+// Where appends a list predicates to the StockMovementMutation builder.
+func (m *StockMovementMutation) Where(ps ...predicate.StockMovement) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the StockMovementMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *StockMovementMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.StockMovement, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *StockMovementMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *StockMovementMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (StockMovement).
+func (m *StockMovementMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *StockMovementMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.created_at != nil {
+		fields = append(fields, stockmovement.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, stockmovement.FieldUpdatedAt)
+	}
+	if m.entity != nil {
+		fields = append(fields, stockmovement.FieldEntityID)
+	}
+	if m.movement_type != nil {
+		fields = append(fields, stockmovement.FieldMovementType)
+	}
+	if m.quantity != nil {
+		fields = append(fields, stockmovement.FieldQuantity)
+	}
+	if m.quantity_after != nil {
+		fields = append(fields, stockmovement.FieldQuantityAfter)
+	}
+	if m.occurred_at != nil {
+		fields = append(fields, stockmovement.FieldOccurredAt)
+	}
+	if m.comment != nil {
+		fields = append(fields, stockmovement.FieldComment)
+	}
+	if m.performed_by != nil {
+		fields = append(fields, stockmovement.FieldPerformedBy)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *StockMovementMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case stockmovement.FieldCreatedAt:
+		return m.CreatedAt()
+	case stockmovement.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case stockmovement.FieldEntityID:
+		return m.EntityID()
+	case stockmovement.FieldMovementType:
+		return m.MovementType()
+	case stockmovement.FieldQuantity:
+		return m.Quantity()
+	case stockmovement.FieldQuantityAfter:
+		return m.QuantityAfter()
+	case stockmovement.FieldOccurredAt:
+		return m.OccurredAt()
+	case stockmovement.FieldComment:
+		return m.Comment()
+	case stockmovement.FieldPerformedBy:
+		return m.PerformedBy()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *StockMovementMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case stockmovement.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case stockmovement.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case stockmovement.FieldEntityID:
+		return m.OldEntityID(ctx)
+	case stockmovement.FieldMovementType:
+		return m.OldMovementType(ctx)
+	case stockmovement.FieldQuantity:
+		return m.OldQuantity(ctx)
+	case stockmovement.FieldQuantityAfter:
+		return m.OldQuantityAfter(ctx)
+	case stockmovement.FieldOccurredAt:
+		return m.OldOccurredAt(ctx)
+	case stockmovement.FieldComment:
+		return m.OldComment(ctx)
+	case stockmovement.FieldPerformedBy:
+		return m.OldPerformedBy(ctx)
+	}
+	return nil, fmt.Errorf("unknown StockMovement field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StockMovementMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case stockmovement.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case stockmovement.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case stockmovement.FieldEntityID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEntityID(v)
+		return nil
+	case stockmovement.FieldMovementType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMovementType(v)
+		return nil
+	case stockmovement.FieldQuantity:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuantity(v)
+		return nil
+	case stockmovement.FieldQuantityAfter:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuantityAfter(v)
+		return nil
+	case stockmovement.FieldOccurredAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOccurredAt(v)
+		return nil
+	case stockmovement.FieldComment:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetComment(v)
+		return nil
+	case stockmovement.FieldPerformedBy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPerformedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StockMovement field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *StockMovementMutation) AddedFields() []string {
+	var fields []string
+	if m.addquantity != nil {
+		fields = append(fields, stockmovement.FieldQuantity)
+	}
+	if m.addquantity_after != nil {
+		fields = append(fields, stockmovement.FieldQuantityAfter)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *StockMovementMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case stockmovement.FieldQuantity:
+		return m.AddedQuantity()
+	case stockmovement.FieldQuantityAfter:
+		return m.AddedQuantityAfter()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StockMovementMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case stockmovement.FieldQuantity:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQuantity(v)
+		return nil
+	case stockmovement.FieldQuantityAfter:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQuantityAfter(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StockMovement numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *StockMovementMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(stockmovement.FieldQuantityAfter) {
+		fields = append(fields, stockmovement.FieldQuantityAfter)
+	}
+	if m.FieldCleared(stockmovement.FieldComment) {
+		fields = append(fields, stockmovement.FieldComment)
+	}
+	if m.FieldCleared(stockmovement.FieldPerformedBy) {
+		fields = append(fields, stockmovement.FieldPerformedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *StockMovementMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *StockMovementMutation) ClearField(name string) error {
+	switch name {
+	case stockmovement.FieldQuantityAfter:
+		m.ClearQuantityAfter()
+		return nil
+	case stockmovement.FieldComment:
+		m.ClearComment()
+		return nil
+	case stockmovement.FieldPerformedBy:
+		m.ClearPerformedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown StockMovement nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *StockMovementMutation) ResetField(name string) error {
+	switch name {
+	case stockmovement.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case stockmovement.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case stockmovement.FieldEntityID:
+		m.ResetEntityID()
+		return nil
+	case stockmovement.FieldMovementType:
+		m.ResetMovementType()
+		return nil
+	case stockmovement.FieldQuantity:
+		m.ResetQuantity()
+		return nil
+	case stockmovement.FieldQuantityAfter:
+		m.ResetQuantityAfter()
+		return nil
+	case stockmovement.FieldOccurredAt:
+		m.ResetOccurredAt()
+		return nil
+	case stockmovement.FieldComment:
+		m.ResetComment()
+		return nil
+	case stockmovement.FieldPerformedBy:
+		m.ResetPerformedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown StockMovement field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *StockMovementMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.entity != nil {
+		edges = append(edges, stockmovement.EdgeEntity)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *StockMovementMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case stockmovement.EdgeEntity:
+		if id := m.entity; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *StockMovementMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *StockMovementMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *StockMovementMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedentity {
+		edges = append(edges, stockmovement.EdgeEntity)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *StockMovementMutation) EdgeCleared(name string) bool {
+	switch name {
+	case stockmovement.EdgeEntity:
+		return m.clearedentity
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *StockMovementMutation) ClearEdge(name string) error {
+	switch name {
+	case stockmovement.EdgeEntity:
+		m.ClearEntity()
+		return nil
+	}
+	return fmt.Errorf("unknown StockMovement unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *StockMovementMutation) ResetEdge(name string) error {
+	switch name {
+	case stockmovement.EdgeEntity:
+		m.ResetEntity()
+		return nil
+	}
+	return fmt.Errorf("unknown StockMovement edge %s", name)
 }
 
 // TagMutation represents an operation that mutates the Tag nodes in the graph.

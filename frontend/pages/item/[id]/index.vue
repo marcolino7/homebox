@@ -475,6 +475,11 @@
         to: `/item/${itemId.value}/maintenance`,
       },
       {
+        id: "stock-movements",
+        name: "stock_movements.title",
+        to: `/item/${itemId.value}/movements`,
+      },
+      {
         id: "edit",
         name: "global.edit",
         to: `/item/${itemId.value}/edit`,

@@ -20,6 +20,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/notifier"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/passwordresettokens"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/schema"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/stockmovement"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/tag"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/templatefield"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/user"
@@ -652,6 +653,55 @@ func init() {
 	passwordresettokensDescID := passwordresettokensMixinFields0[0].Descriptor()
 	// passwordresettokens.DefaultID holds the default value on creation for the id field.
 	passwordresettokens.DefaultID = passwordresettokensDescID.Default.(func() uuid.UUID)
+	stockmovementMixin := schema.StockMovement{}.Mixin()
+	stockmovementMixinFields0 := stockmovementMixin[0].Fields()
+	_ = stockmovementMixinFields0
+	stockmovementFields := schema.StockMovement{}.Fields()
+	_ = stockmovementFields
+	// stockmovementDescCreatedAt is the schema descriptor for created_at field.
+	stockmovementDescCreatedAt := stockmovementMixinFields0[1].Descriptor()
+	// stockmovement.DefaultCreatedAt holds the default value on creation for the created_at field.
+	stockmovement.DefaultCreatedAt = stockmovementDescCreatedAt.Default.(func() time.Time)
+	// stockmovementDescUpdatedAt is the schema descriptor for updated_at field.
+	stockmovementDescUpdatedAt := stockmovementMixinFields0[2].Descriptor()
+	// stockmovement.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	stockmovement.DefaultUpdatedAt = stockmovementDescUpdatedAt.Default.(func() time.Time)
+	// stockmovement.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	stockmovement.UpdateDefaultUpdatedAt = stockmovementDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// stockmovementDescMovementType is the schema descriptor for movement_type field.
+	stockmovementDescMovementType := stockmovementFields[1].Descriptor()
+	// stockmovement.MovementTypeValidator is a validator for the "movement_type" field. It is called by the builders before save.
+	stockmovement.MovementTypeValidator = func() func(string) error {
+		validators := stockmovementDescMovementType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(movement_type string) error {
+			for _, fn := range fns {
+				if err := fn(movement_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// stockmovementDescOccurredAt is the schema descriptor for occurred_at field.
+	stockmovementDescOccurredAt := stockmovementFields[4].Descriptor()
+	// stockmovement.DefaultOccurredAt holds the default value on creation for the occurred_at field.
+	stockmovement.DefaultOccurredAt = stockmovementDescOccurredAt.Default.(func() time.Time)
+	// stockmovementDescComment is the schema descriptor for comment field.
+	stockmovementDescComment := stockmovementFields[5].Descriptor()
+	// stockmovement.CommentValidator is a validator for the "comment" field. It is called by the builders before save.
+	stockmovement.CommentValidator = stockmovementDescComment.Validators[0].(func(string) error)
+	// stockmovementDescPerformedBy is the schema descriptor for performed_by field.
+	stockmovementDescPerformedBy := stockmovementFields[6].Descriptor()
+	// stockmovement.PerformedByValidator is a validator for the "performed_by" field. It is called by the builders before save.
+	stockmovement.PerformedByValidator = stockmovementDescPerformedBy.Validators[0].(func(string) error)
+	// stockmovementDescID is the schema descriptor for id field.
+	stockmovementDescID := stockmovementMixinFields0[0].Descriptor()
+	// stockmovement.DefaultID holds the default value on creation for the id field.
+	stockmovement.DefaultID = stockmovementDescID.Default.(func() uuid.UUID)
 	tagMixin := schema.Tag{}.Mixin()
 	tagMixinFields0 := tagMixin[0].Fields()
 	_ = tagMixinFields0

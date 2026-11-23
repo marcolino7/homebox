@@ -11,6 +11,8 @@ import type {
   MaintenanceEntry,
   MaintenanceEntryCreate,
   MaintenanceEntryWithDetails,
+  StockMovement,
+  StockMovementCreate,
   TreeItem,
 } from "../types/data-contracts";
 import type { AttachmentTypes } from "../types/non-generated";
@@ -108,9 +110,23 @@ export class ItemMaintenanceAPI extends BaseAPI {
   }
 }
 
+export class ItemStockMovementsAPI extends BaseAPI {
+  getLog(itemId: string) {
+    return this.http.get<StockMovement[]>({ url: route(`/entities/${itemId}/stock-movements`) });
+  }
+
+  create(itemId: string, data: StockMovementCreate) {
+    return this.http.post<StockMovementCreate, StockMovement>({
+      url: route(`/entities/${itemId}/stock-movements`),
+      body: data,
+    });
+  }
+}
+
 export class ItemsApi extends BaseAPI {
   attachments: AttachmentsAPI;
   maintenance: ItemMaintenanceAPI;
+  stockMovements: ItemStockMovementsAPI;
   fields: FieldsAPI;
 
   constructor(http: Requests, token: string) {
@@ -118,6 +134,7 @@ export class ItemsApi extends BaseAPI {
     this.fields = new FieldsAPI(http);
     this.attachments = new AttachmentsAPI(http);
     this.maintenance = new ItemMaintenanceAPI(http);
+    this.stockMovements = new ItemStockMovementsAPI(http);
   }
 
   fullpath(id: string) {

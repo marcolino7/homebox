@@ -139,6 +139,7 @@ var (
 		{Name: "import_ref", Type: field.TypeString, Nullable: true, Size: 100},
 		{Name: "notes", Type: field.TypeString, Nullable: true, Size: 1000},
 		{Name: "quantity", Type: field.TypeFloat64, Default: 1},
+		{Name: "low_stock_threshold", Type: field.TypeFloat64, Nullable: true},
 		{Name: "insured", Type: field.TypeBool, Default: false},
 		{Name: "archived", Type: field.TypeBool, Default: false},
 		{Name: "asset_id", Type: field.TypeInt64, Default: 0},
@@ -169,25 +170,25 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "entities_entities_children",
-				Columns:    []*schema.Column{EntitiesColumns[25]},
-				RefColumns: []*schema.Column{EntitiesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "entities_entities_location_entities",
 				Columns:    []*schema.Column{EntitiesColumns[26]},
 				RefColumns: []*schema.Column{EntitiesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "entities_entity_types_entities",
+				Symbol:     "entities_entities_location_entities",
 				Columns:    []*schema.Column{EntitiesColumns[27]},
+				RefColumns: []*schema.Column{EntitiesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "entities_entity_types_entities",
+				Columns:    []*schema.Column{EntitiesColumns[28]},
 				RefColumns: []*schema.Column{EntityTypesColumns[0]},
 				OnDelete:   schema.Restrict,
 			},
 			{
 				Symbol:     "entities_groups_entities",
-				Columns:    []*schema.Column{EntitiesColumns[28]},
+				Columns:    []*schema.Column{EntitiesColumns[29]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -201,27 +202,27 @@ var (
 			{
 				Name:    "entity_manufacturer",
 				Unique:  false,
-				Columns: []*schema.Column{EntitiesColumns[14]},
+				Columns: []*schema.Column{EntitiesColumns[15]},
 			},
 			{
 				Name:    "entity_model_number",
 				Unique:  false,
-				Columns: []*schema.Column{EntitiesColumns[13]},
+				Columns: []*schema.Column{EntitiesColumns[14]},
 			},
 			{
 				Name:    "entity_serial_number",
 				Unique:  false,
-				Columns: []*schema.Column{EntitiesColumns[12]},
+				Columns: []*schema.Column{EntitiesColumns[13]},
 			},
 			{
 				Name:    "entity_archived",
 				Unique:  false,
-				Columns: []*schema.Column{EntitiesColumns[9]},
+				Columns: []*schema.Column{EntitiesColumns[10]},
 			},
 			{
 				Name:    "entity_asset_id",
 				Unique:  false,
-				Columns: []*schema.Column{EntitiesColumns[10]},
+				Columns: []*schema.Column{EntitiesColumns[11]},
 			},
 		},
 	}
@@ -262,6 +263,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 1000},
 		{Name: "notes", Type: field.TypeString, Nullable: true, Size: 1000},
 		{Name: "default_quantity", Type: field.TypeFloat64, Default: 1},
+		{Name: "default_low_stock_threshold", Type: field.TypeFloat64, Nullable: true},
 		{Name: "default_insured", Type: field.TypeBool, Default: false},
 		{Name: "default_name", Type: field.TypeString, Nullable: true, Size: 255},
 		{Name: "default_description", Type: field.TypeString, Nullable: true, Size: 1000},
@@ -284,13 +286,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "entity_templates_entities_location",
-				Columns:    []*schema.Column{EntityTemplatesColumns[18]},
+				Columns:    []*schema.Column{EntityTemplatesColumns[19]},
 				RefColumns: []*schema.Column{EntitiesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "entity_templates_groups_entity_templates",
-				Columns:    []*schema.Column{EntityTemplatesColumns[19]},
+				Columns:    []*schema.Column{EntityTemplatesColumns[20]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -522,6 +524,40 @@ var (
 			},
 		},
 	}
+	// StockMovementsColumns holds the columns for the "stock_movements" table.
+	StockMovementsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "movement_type", Type: field.TypeString, Size: 20},
+		{Name: "quantity", Type: field.TypeFloat64},
+		{Name: "quantity_after", Type: field.TypeFloat64, Nullable: true},
+		{Name: "occurred_at", Type: field.TypeTime},
+		{Name: "comment", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "performed_by", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "entity_id", Type: field.TypeUUID},
+	}
+	// StockMovementsTable holds the schema information for the "stock_movements" table.
+	StockMovementsTable = &schema.Table{
+		Name:       "stock_movements",
+		Columns:    StockMovementsColumns,
+		PrimaryKey: []*schema.Column{StockMovementsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "stock_movements_entities_stock_movements",
+				Columns:    []*schema.Column{StockMovementsColumns[9]},
+				RefColumns: []*schema.Column{EntitiesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "stockmovement_entity_id_occurred_at",
+				Unique:  false,
+				Columns: []*schema.Column{StockMovementsColumns[9], StockMovementsColumns[6]},
+			},
+		},
+	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -678,6 +714,7 @@ var (
 		MaintenanceEntriesTable,
 		NotifiersTable,
 		PasswordResetTokensTable,
+		StockMovementsTable,
 		TagsTable,
 		TemplateFieldsTable,
 		UsersTable,
@@ -707,6 +744,7 @@ func init() {
 	NotifiersTable.ForeignKeys[0].RefTable = GroupsTable
 	NotifiersTable.ForeignKeys[1].RefTable = UsersTable
 	PasswordResetTokensTable.ForeignKeys[0].RefTable = UsersTable
+	StockMovementsTable.ForeignKeys[0].RefTable = EntitiesTable
 	TagsTable.ForeignKeys[0].RefTable = GroupsTable
 	TagsTable.ForeignKeys[1].RefTable = TagsTable
 	TemplateFieldsTable.ForeignKeys[0].RefTable = EntityTemplatesTable

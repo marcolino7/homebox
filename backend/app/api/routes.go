@@ -224,6 +224,10 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Get("/entities/{id}/maintenance", chain.ToHandlerFunc(v1Ctrl.HandleMaintenanceLogGet(), userMW...))
 		r.Post("/entities/{id}/maintenance", chain.ToHandlerFunc(v1Ctrl.HandleMaintenanceEntryCreate(), userMW...))
 
+		// Entity stock movements endpoints
+		r.Get("/entities/{id}/stock-movements", chain.ToHandlerFunc(v1Ctrl.HandleStockMovementsGet(), userMW...))
+		r.Post("/entities/{id}/stock-movements", chain.ToHandlerFunc(v1Ctrl.HandleStockMovementCreate(), userMW...))
+
 		r.Get("/assets/{id}", chain.ToHandlerFunc(v1Ctrl.HandleAssetGet(), userMW...))
 
 		// Entity Templates
