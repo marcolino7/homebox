@@ -116,6 +116,8 @@ type (
 	}
 
 	EntityUpdate struct {
+		// MovementComment is an optional note stored on the stock movement created when quantity changes. Not persisted on the entity.
+		MovementComment string `json:"movementComment,omitempty" validate:"max=500"`
 		WarrantyExpires types.Date `json:"warrantyExpires"`
 		// Purchase
 		PurchaseDate types.Date `json:"purchaseDate"`
@@ -155,6 +157,8 @@ type (
 	}
 
 	EntityPatch struct {
+		// MovementComment is an optional note stored on the stock movement created when quantity changes. Not persisted on the entity.
+		MovementComment string `json:"movementComment,omitempty" validate:"max=500"`
 		ID                uuid.UUID   `json:"id"`
 		Quantity          *float64    `json:"quantity,omitempty" extensions:"x-nullable,x-omitempty"`
 		LowStockThreshold *float64    `json:"lowStockThreshold,omitempty" extensions:"x-nullable,x-omitempty"`

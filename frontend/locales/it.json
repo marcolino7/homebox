@@ -678,6 +678,7 @@
         "current_quantity": "Quantità attuale",
         "empty": "Nessun movimento registrato per questo oggetto.",
         "field": {
+            "note_placeholder": "Nota facoltativa per il prossimo +/-",
             "comment": "Commento",
             "new_quantity": "Nuova quantità",
             "quantity": "Quantità",

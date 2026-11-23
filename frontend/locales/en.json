@@ -754,6 +754,7 @@
         "current_quantity": "Current quantity",
         "empty": "No movements recorded for this item yet.",
         "field": {
+            "note_placeholder": "Optional note for the next +/-",
             "comment": "Comment",
             "new_quantity": "New quantity",
             "quantity": "Quantity",

@@ -850,6 +850,8 @@ export interface EntityOut {
 }
 
 export interface EntityPatch {
+  /** @maxLength 500 */
+  movementComment?: string;
   entityTypeId?: string | null;
   id: string;
   locationId?: string | null;
@@ -1027,6 +1029,8 @@ export interface EntityTypeUpdate {
 }
 
 export interface EntityUpdate {
+  /** @maxLength 500 */
+  movementComment?: string;
   archived: boolean;
   assetId: string;
   /** @maxLength 1000 */

@@ -87,9 +87,15 @@
   };
 
   const item = ref<EditableItem>(null as never);
+  const movementComment = ref("");
+  const originalQuantity = ref<number | null>(null);
+  const quantityChanged = computed(
+    () => originalQuantity.value !== null && item.value && Number(item.value.quantity) !== originalQuantity.value
+  );
 
   watchEffect(() => {
     if (nullableItem.value) {
+      originalQuantity.value = nullableItem.value.quantity;
       item.value = {
         ...nullableItem.value,
         lowStockThreshold: nullableItem.value.lowStockThreshold ?? undefined,
@@ -139,6 +145,7 @@
 
     const payload: EntityUpdate = {
       ...item.value,
+      movementComment: quantityChanged.value ? movementComment.value : "",
       // A selected parent item is the entity's real parent; otherwise the
       // item hangs directly off the chosen location.
       parentId: parent.value?.id || location.value?.id || null,
@@ -603,6 +610,7 @@
 
     const payload: EntityUpdate = {
       ...item.value,
+      movementComment: quantityChanged.value ? movementComment.value : "",
       parentId: parent.value?.id || location.value?.id || null,
       locationId: parent.value?.id && locationExplicit.value ? location.value?.id || null : null,
       tagIds: item.value.tagIds,
@@ -783,6 +791,14 @@
                   v-model="item[field.ref]"
                   :label="$t(field.label)"
                   inline
+                />
+                <FormTextField
+                  v-if="field.ref === 'quantity' && quantityChanged"
+                  v-model="movementComment"
+                  :label="$t('stock_movements.field.comment')"
+                  inline
+                  type="text"
+                  :max-length="500"
                 />
               </div>
             </div>

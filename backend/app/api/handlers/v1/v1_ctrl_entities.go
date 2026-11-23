@@ -335,7 +335,7 @@ func (ctrl *V1Controller) HandleEntityUpdate() errchain.HandlerFunc {
 		}
 		if qerr == nil {
 			// Keep the quantity ledger in step with edits made through the edit form.
-			if rerr := ctrl.repo.StockMovements.RecordChange(auth, ID, before, out.Quantity, repo.StockMovementAdjustment, userDisplayName(auth), ""); rerr != nil {
+			if rerr := ctrl.repo.StockMovements.RecordChange(auth, ID, before, out.Quantity, repo.StockMovementAdjustment, userDisplayName(auth), body.MovementComment); rerr != nil {
 				recordCtrlSpanError(span, rerr)
 			}
 		}
@@ -389,7 +389,7 @@ func (ctrl *V1Controller) HandleEntityPatch() errchain.HandlerFunc {
 			if out.Quantity < before {
 				kind = repo.StockMovementOut
 			}
-			if rerr := ctrl.repo.StockMovements.RecordChange(auth, ID, before, out.Quantity, kind, userDisplayName(auth), ""); rerr != nil {
+			if rerr := ctrl.repo.StockMovements.RecordChange(auth, ID, before, out.Quantity, kind, userDisplayName(auth), body.MovementComment); rerr != nil {
 				recordCtrlSpanError(span, rerr)
 			}
 		}

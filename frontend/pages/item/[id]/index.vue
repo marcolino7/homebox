@@ -93,6 +93,8 @@
     lastRoute.value = route.fullPath;
   });
 
+  const movementNote = ref("");
+
   async function adjustQuantity(amount: number) {
     if (!item.value) {
       return;
@@ -107,6 +109,7 @@
     const resp = await api.items.patch(item.value.id, {
       id: item.value.id,
       quantity: newQuantity,
+      movementComment: movementNote.value.trim() || undefined,
     });
 
     if (resp.error) {
@@ -116,6 +119,7 @@
 
     if (resp.data) {
       item.value = resp.data;
+      movementNote.value = "";
     }
   }
 
@@ -801,6 +805,13 @@
                   <Button size="icon" variant="outline" class="size-8 rounded-full" @click="adjustQuantity(1)">
                     <MdiPlus class="size-3" />
                   </Button>
+                  <input
+                    v-model="movementNote"
+                    type="text"
+                    maxlength="500"
+                    :placeholder="$t('stock_movements.field.note_placeholder')"
+                    class="h-8 w-48 rounded-md border bg-background px-2 text-sm"
+                  />
                 </span>
               </div>
             </template>
