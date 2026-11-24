@@ -6,7 +6,6 @@
   import { Input } from "@/components/ui/input";
   import BaseCard from "@/components/Base/Card.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
-  import DateTime from "~/components/global/DateTime.vue";
   import { toast } from "@/components/ui/sonner";
 
   const props = defineProps<{
@@ -109,7 +108,7 @@
         <span v-if="m.quantityAfter !== undefined && m.quantityAfter !== null" class="text-sm text-muted-foreground">
           &rarr; {{ m.quantityAfter }}
         </span>
-        <span class="text-sm"><DateTime :date="m.occurredAt" format="human" datetime-type="time" /></span>
+        <span class="text-sm">{{ fmtDateSmart(m.occurredAt) }}</span>
         <span v-if="m.performedBy" class="text-sm text-muted-foreground">{{ m.performedBy }}</span>
         <span v-if="m.comment" class="text-sm">{{ m.comment }}</span>
       </div>

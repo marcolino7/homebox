@@ -1,4 +1,4 @@
-import { format, formatDistance } from "date-fns";
+import { differenceInCalendarDays, format, formatDistance } from "date-fns";
 import { reactive } from "vue";
 /* eslint import/namespace: ['error', { allowComputed: true }] */
 import * as Locales from "date-fns/locale";
@@ -112,4 +112,33 @@ export function fmtDate(
   }
 
   return format(dt, formatStr, localeOptions);
+}
+
+// fmtDateSmart shows "today at 14:32" / "yesterday at 14:32" (localized) for
+// the last two days, and falls back to the full date and time otherwise —
+// used where a bare time (fmtDate's `type: "time"`) would hide the date.
+export function fmtDateSmart(value: string | Date | number): string {
+  let dt: Date | null;
+  if (isDateOnlyString(value)) {
+    dt = parseDateOnly(value);
+  } else if (typeof value === "string" || typeof value === "number") {
+    dt = new Date(value);
+  } else {
+    dt = value;
+  }
+
+  if (!dt || !validDate(dt)) {
+    return "";
+  }
+
+  const now = new Date();
+  const diff = differenceInCalendarDays(dt, now);
+  if (diff !== 0 && diff !== -1) {
+    return fmtDate(value, "human", "datetime");
+  }
+
+  const locale = getLocaleForDate();
+  const token = diff === 0 ? "today" : "yesterday";
+  const formatStr = locale.formatRelative(token, dt, now, { locale });
+  return format(dt, formatStr, { locale });
 }
